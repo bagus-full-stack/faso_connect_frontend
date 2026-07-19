@@ -23,6 +23,7 @@ export function useTranslationHistory() {
     if (stored) {
       try {
         
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setHistory(JSON.parse(stored));
       } catch (e) {
         

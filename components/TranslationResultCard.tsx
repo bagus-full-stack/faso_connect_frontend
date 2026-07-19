@@ -99,15 +99,18 @@ export function TranslationResultCard({ targetLang, onTargetLangChange, translat
             <button 
               onClick={handleCopy} 
               disabled={!translatedText || isTranslating}
-              aria-label="Copier la traduction"
+              aria-label="Copier le texte traduit"
               className="p-2 hover:bg-white/50 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
             >
               {isCopied ? <Check size={20} className="text-secondary" /> : <Copy size={20} />}
+              <span aria-live="polite" className="sr-only">
+                {isCopied ? 'Copié !' : ''}
+              </span>
             </button>
             <button 
               onClick={handleListen}
               disabled={!translatedText || isTranslating || isLoadingAudio}
-              aria-label={isPlaying ? "Arrêter la lecture" : "Écouter la traduction"}
+              aria-label={isPlaying ? "Mettre en pause" : "Écouter la traduction"}
               className={`p-2 hover:bg-white/50 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50 ${isPlaying ? 'text-primary' : ''}`}
             >
               {isLoadingAudio ? <Loader2 size={20} className="animate-spin" /> : <Volume2 size={20} />}

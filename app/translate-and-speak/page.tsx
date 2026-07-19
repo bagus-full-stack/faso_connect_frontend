@@ -34,10 +34,12 @@ export default function TranslateAndSpeakPage() {
 
       if (pSource) {
         
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSourceLang(pSource);
       }
       if (pTarget) {
         
+         
         setTargetLang(pTarget);
       }
       if (pText) {

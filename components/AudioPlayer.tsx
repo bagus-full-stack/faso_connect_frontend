@@ -98,6 +98,7 @@ export function AudioPlayer({ audioUrl, onEnded, onPlayStateChange }: AudioPlaye
       <button
         onClick={togglePlay}
         disabled={!audioUrl}
+        aria-label={isPlaying ? "Mettre en pause" : "Lire l'audio"}
         className="w-14 h-14 shrink-0 bg-primary text-white rounded-full flex items-center justify-center hover:bg-primary-container transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
       >
         {isPlaying ? <Pause size={24} /> : <Play size={24} className="ml-1" />}

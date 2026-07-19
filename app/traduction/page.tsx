@@ -32,8 +32,10 @@ export default function TraductionPage() {
       
       if (pSource || pTarget || pText) {
         
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (pSource) setSourceLang(pSource);
         
+         
         if (pTarget) setTargetLang(pTarget);
         
         if (pText) setSourceText(pText);
