@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import logoSrc from '../public/images/fasoconnect_logo.png';
 
 interface LogoProps {
   width?: number;
@@ -9,7 +10,7 @@ interface LogoProps {
 export function Logo({ width = 40, height = 40, className = '' }: LogoProps) {
   return (
     <Image 
-      src="/images/fasoconnect_logo.png" 
+      src={logoSrc} 
       alt="FasoConnect Logo" 
       width={width} 
       height={height}
