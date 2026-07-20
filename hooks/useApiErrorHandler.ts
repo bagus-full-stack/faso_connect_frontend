@@ -49,6 +49,16 @@ export function useApiErrorHandler() {
         }
         
         setFieldErrors(newFieldErrors);
+      } else if (apiErr.statusCode === 429) {
+        let retryMsg = "Trop de requêtes, réessayez dans quelques instants.";
+        const retryAfter = (apiErr as any).retryAfter;
+        if (retryAfter) {
+          retryMsg += ` (${retryAfter}s)`;
+        }
+        toast.error("Limite de requêtes atteinte", {
+          description: retryMsg
+        });
+        setApiError(retryMsg);
       } else {
         toast.error("Une erreur est survenue, réessayez.", {
           description: apiErr.message

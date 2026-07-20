@@ -1,4 +1,5 @@
 'use client';
+import { useSWRConfig } from 'swr';
 
 import { useState, useEffect } from 'react';
 import { TranslateForm } from '@/components/TranslateForm';
@@ -6,11 +7,11 @@ import { TranslationResultCard } from '@/components/TranslationResultCard';
 import { SwapLanguagesButton } from '@/components/SwapLanguagesButton';
 import { FormFieldError } from '@/components/FormFieldError';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
-import { useTranslationHistory } from '@/hooks/useTranslationHistory';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 
 export default function TraductionPage() {
+  const { mutate } = useSWRConfig();
   const [sourceLang, setSourceLang] = useState('fr');
   const [targetLang, setTargetLang] = useState('mos');
   const [sourceText, setSourceText] = useState('');
@@ -18,8 +19,7 @@ export default function TraductionPage() {
   const [isTranslating, setIsTranslating] = useState(false);
   
   const { fieldErrors, handleError, clearErrors, setFieldErrors } = useApiErrorHandler();
-  const { addEntry } = useTranslationHistory();
-
+  
   // Restore state from local storage or URL params on mount
   useEffect(() => {
     try {
@@ -87,14 +87,9 @@ export default function TraductionPage() {
         text: sourceText
       });
       setTranslatedText(res.translatedText);
+      mutate('/history');
       
-      addEntry({
-        type: 'translation',
-        sourceLanguage: sourceLang,
-        targetLanguage: targetLang,
-        sourceText: sourceText,
-        translatedText: res.translatedText
-      });
+      
     } catch (error: unknown) {
       
       handleError(error);

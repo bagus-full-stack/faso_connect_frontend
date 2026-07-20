@@ -1,4 +1,5 @@
 'use client';
+import { useSWRConfig } from 'swr';
 
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
@@ -9,10 +10,10 @@ import { AudioPlayer } from '@/components/AudioPlayer';
 import { StepProgress } from '@/components/StepProgress';
 import { FormFieldError } from '@/components/FormFieldError';
 import { useApiErrorHandler } from '@/hooks/useApiErrorHandler';
-import { useTranslationHistory } from '@/hooks/useTranslationHistory';
 import { Loader2, Mic, AlertCircle, ArrowRight } from 'lucide-react';
 
 export default function TranslateAndSpeakPage() {
+  const { mutate } = useSWRConfig();
   const [sourceLang, setSourceLang] = useState('');
   const [targetLang, setTargetLang] = useState('');
   const [text, setText] = useState('');
@@ -23,8 +24,7 @@ export default function TranslateAndSpeakPage() {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
   const { fieldErrors, apiError, handleError, clearErrors, setFieldErrors } = useApiErrorHandler();
-  const { addEntry } = useTranslationHistory();
-
+  
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -97,18 +97,11 @@ export default function TranslateAndSpeakPage() {
       await new Promise(r => setTimeout(r, 400));
 
       setTranslatedText(res.translatedText);
+      mutate('/history');
       setAudioUrl(res.audioUrl);
       setStep(3); // Done
 
-      addEntry({
-        type: 'translate-and-speak',
-        sourceLanguage: sourceLang,
-        targetLanguage: targetLang,
-        sourceText: text,
-        translatedText: res.translatedText,
-        audioUrl: res.audioUrl
-      });
-
+      
     } catch (err: unknown) {
       
       handleError(err);

@@ -50,3 +50,13 @@ Le projet est configuré pour être déployé automatiquement sur GitHub Pages v
 5. Poussez votre code sur la branche `main` pour déclencher le premier déploiement.
 
 *Note : Le fichier `next.config.ts` gère automatiquement le `basePath` et le `assetPrefix` selon le nom de votre repository.*
+
+## Avertissement de sécurité (Déploiement statique)
+
+Cette application utilise \`output: 'export'\` pour être déployée statiquement sur GitHub Pages.
+Par conséquent, la clé d'API configurée via \`NEXT_PUBLIC_API_KEY\` (envoyée via le header \`X-API-Key\`) sera incluse dans le bundle JavaScript côté client et visible dans le navigateur.
+
+Dans un environnement de production réel avec des données sensibles ou une API facturée, il est fortement recommandé de :
+1. Changer le mode de déploiement (ex: Vercel, Cloud Run, ou un serveur Node.js).
+2. Créer des routes API Next.js (\`/app/api/.../route.ts\`) pour proxifier les requêtes vers le backend.
+3. Conserver la clé d'API uniquement côté serveur (ex: \`API_KEY\`, sans le préfixe \`NEXT_PUBLIC_\`).

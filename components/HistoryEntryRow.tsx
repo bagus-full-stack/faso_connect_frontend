@@ -1,14 +1,15 @@
-import { HistoryEntry } from '@/hooks/useTranslationHistory';
-import { Copy, RotateCcw, Volume2, ArrowRight } from 'lucide-react';
+import { HistoryEntry } from '@/lib/types';
+import { Copy, RotateCcw, Volume2, ArrowRight, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
 interface HistoryEntryRowProps {
   entry: HistoryEntry;
   onPlayAudio?: (url: string) => void;
+  onDelete?: (id: string) => void;
 }
 
-export function HistoryEntryRow({ entry, onPlayAudio }: HistoryEntryRowProps) {
+export function HistoryEntryRow({ entry, onPlayAudio, onDelete }: HistoryEntryRowProps) {
   const router = useRouter();
 
   const handleCopy = async () => {
@@ -59,6 +60,11 @@ export function HistoryEntryRow({ entry, onPlayAudio }: HistoryEntryRowProps) {
            <button onClick={handleRedo} className="p-1.5 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-colors" title="Refaire cette traduction">
              <RotateCcw size={18} />
            </button>
+           {onDelete && (
+             <button onClick={() => onDelete(entry.id)} className="p-1.5 text-error hover:bg-error/10 rounded-lg transition-colors" title="Supprimer">
+               <Trash2 size={18} />
+             </button>
+           )}
         </div>
       </div>
       

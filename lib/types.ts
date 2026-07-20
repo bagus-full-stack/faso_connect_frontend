@@ -34,3 +34,14 @@ export class ApiError extends Error {
     this.name = 'ApiError';
   }
 }
+
+export interface HistoryEntry {
+  id: string;
+  timestamp: number;
+  type: 'translation' | 'translate-and-speak';
+  sourceLanguage: string;
+  targetLanguage: string;
+  sourceText: string;
+  translatedText: string;
+  audioUrl?: string | null;
+}

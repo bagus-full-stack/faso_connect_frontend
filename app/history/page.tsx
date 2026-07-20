@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useRef } from 'react';
-import { useTranslationHistory } from '@/hooks/useTranslationHistory';
+import { useHistory } from '@/hooks/useHistory';
 import { HistoryEntryRow } from '@/components/HistoryEntryRow';
 import { EmptyState } from '@/components/EmptyState';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -9,7 +9,7 @@ import { Trash2, History } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function HistoryPage() {
-  const { history, isLoaded, clearHistory } = useTranslationHistory();
+  const { history, isLoaded, clearHistory, removeEntry } = useHistory();
   const [selectedLangs, setSelectedLangs] = useState<string[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   
@@ -118,7 +118,8 @@ export default function HistoryPage() {
           <div className="space-y-4">
             {filteredHistory.map(entry => (
               <HistoryEntryRow 
-                key={entry.id} 
+                key={entry.id}
+                 onDelete={removeEntry} 
                 entry={entry} 
                 onPlayAudio={playAudio} 
               />
