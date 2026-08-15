@@ -17,6 +17,7 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
       signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
+        'Bypass-Tunnel-Reminder': 'true',
         ...(API_KEY ? { 'X-API-Key': API_KEY } : {}),
         ...options?.headers,
       },
