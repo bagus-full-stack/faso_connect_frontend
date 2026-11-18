@@ -3,6 +3,22 @@ import { ApiError, Language, TranslateRequest, TranslateResponse, TTSRequest, Tr
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
 
+// Identifiant anonyme par navigateur : le back n'expose que l'historique de cette session.
+let memorySessionId: string | null = null; // repli si localStorage est indisponible
+
+function getSessionId(): string {
+  try {
+    let id = localStorage.getItem('fasoconnect_session_id');
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem('fasoconnect_session_id', id);
+    }
+    return id;
+  } catch {
+    return (memorySessionId ??= crypto.randomUUID()); // stockage indisponible (mode privé)
+  }
+}
+
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
   if (!API_BASE_URL) {
     throw new Error("NEXT_PUBLIC_API_BASE_URL n'est pas configuré");
@@ -18,6 +34,7 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
       headers: {
         'Content-Type': 'application/json',
         ...(API_KEY ? { 'X-API-Key': API_KEY } : {}),
+        'X-Session-Id': getSessionId(),
         ...options?.headers,
       },
     });
