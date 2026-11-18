@@ -27,7 +27,10 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
       let retryAfter = response.headers.get('Retry-After');
       try {
         const errorData = await response.json();
-        message = errorData.message || message;
+        const d = errorData.detail ?? errorData.message;
+        message = Array.isArray(d)
+          ? d.map((x: any) => (typeof x === 'string' ? x : x.msg)).join(' ; ')
+          : d || message;
       } catch (e) {
         // ignore
       }
@@ -54,22 +57,90 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
   }
 }
 
+const wavUrl = (b64: string) => `data:audio/wav;base64,${b64}`;
+
+// Le back ne stocke pas l'historique tout seul : on l'enregistre après chaque action.
+// Un échec d'historique ne doit pas casser l'action principale.
+async function logHistory(entry: Record<string, unknown>) {
+  try {
+    await fetchApi('/history', { method: 'POST', body: JSON.stringify(entry) });
+  } catch {
+    // ignore
+  }
+}
+
+type BackHistoryEntry = {
+  id: string;
+  action_type: 'translate' | 'tts' | 'translate_and_speak';
+  src_lang: string | null;
+  tgt_lang: string | null;
+  source_text: string | null;
+  result_text: string | null;
+  created_at: string;
+};
+
+const HISTORY_TYPES = {
+  translate: 'translation',
+  tts: 'tts',
+  translate_and_speak: 'translate-and-speak',
+} as const;
+
 export const api = {
   getHealth: () => fetchApi<{ status: string }>('/health'),
-  getLanguages: () => fetchApi<Language[]>('/languages'),
-  translate: (payload: TranslateRequest) => fetchApi<TranslateResponse>('/translate', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  }),
-  textToSpeech: (payload: TTSRequest) => fetchApi<{ audioUrl: string }>('/tts', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  }),
-  translateAndSpeak: (payload: TranslateRequest & { speed?: number }) => fetchApi<TranslateAndSpeakResponse>('/translate-and-speak', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  }),
-  getHistory: () => fetchApi<HistoryEntry[]>('/history'),
+  getLanguages: async (): Promise<Language[]> => {
+    const r = await fetchApi<{ translation_supported: string[]; tts_supported: string[] }>('/languages');
+    return r.translation_supported.map((code) => ({
+      code,
+      name: code.charAt(0).toUpperCase() + code.slice(1),
+      supportsTTS: r.tts_supported.includes(code),
+    }));
+  },
+  translate: async (p: TranslateRequest): Promise<TranslateResponse> => {
+    const r = await fetchApi<{ translated_text: string }>('/translate', {
+      method: 'POST',
+      body: JSON.stringify({ text: p.text, src_lang: p.sourceLanguage, tgt_lang: p.targetLanguage }),
+    });
+    await logHistory({
+      action_type: 'translate', src_lang: p.sourceLanguage, tgt_lang: p.targetLanguage,
+      source_text: p.text, result_text: r.translated_text,
+    });
+    return { translatedText: r.translated_text };
+  },
+  textToSpeech: async (p: TTSRequest): Promise<{ audioUrl: string }> => {
+    const r = await fetchApi<{ audio_b64: string }>('/tts', {
+      method: 'POST',
+      body: JSON.stringify({ text: p.text, lang: p.language, speed: p.speed ?? 1 }),
+    });
+    await logHistory({
+      action_type: 'tts', src_lang: p.language, source_text: p.text, result_text: p.text, speed: p.speed ?? 1,
+    });
+    return { audioUrl: wavUrl(r.audio_b64) };
+  },
+  translateAndSpeak: async (p: TranslateRequest & { speed?: number }): Promise<TranslateAndSpeakResponse> => {
+    const r = await fetchApi<{ translated_text: string; audio_b64: string }>('/translate-and-speak', {
+      method: 'POST',
+      body: JSON.stringify({ text: p.text, src_lang: p.sourceLanguage, tgt_lang: p.targetLanguage, speed: p.speed ?? 1 }),
+    });
+    await logHistory({
+      action_type: 'translate_and_speak', src_lang: p.sourceLanguage, tgt_lang: p.targetLanguage,
+      source_text: p.text, result_text: r.translated_text, speed: p.speed ?? 1,
+    });
+    return { translatedText: r.translated_text, audioUrl: wavUrl(r.audio_b64) };
+  },
+  // limit=100 : maximum accepté par le back (pas de pagination dans l'UI)
+  getHistory: async (): Promise<HistoryEntry[]> => {
+    const r = await fetchApi<{ items: BackHistoryEntry[] }>('/history?limit=100');
+    return r.items.map((e) => ({
+      id: e.id,
+      timestamp: new Date(e.created_at).getTime(),
+      type: HISTORY_TYPES[e.action_type],
+      sourceLanguage: e.src_lang ?? '',
+      targetLanguage: e.tgt_lang ?? '',
+      sourceText: e.source_text ?? '',
+      translatedText: e.result_text ?? '',
+      audioUrl: null,
+    }));
+  },
   deleteHistoryEntry: (id: string) => fetchApi<void>(`/history/${id}`, { method: 'DELETE' }),
   clearHistory: () => fetchApi<void>('/history', { method: 'DELETE' }),
 };

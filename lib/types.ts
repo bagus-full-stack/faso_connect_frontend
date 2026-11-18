@@ -38,7 +38,7 @@ export class ApiError extends Error {
 export interface HistoryEntry {
   id: string;
   timestamp: number;
-  type: 'translation' | 'translate-and-speak';
+  type: 'translation' | 'tts' | 'translate-and-speak';
   sourceLanguage: string;
   targetLanguage: string;
   sourceText: string;
